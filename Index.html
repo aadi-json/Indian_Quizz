@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian-English to Fluent English Quiz</title>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <!-- LOGIN SCREEN -->
+    <div id="screen-login">
+        <h2>Assignment: Indian-English to Fluent English</h2>
+        <p><strong>Target Audience:</strong> Recent Graduates preparing for a Customer Support role at Cognizant India.</p>
+        <hr>
+        <h3>Participant Login</h3>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="student-name-select">Participant Name *</label>
+                <select id="student-name-select" onchange="toggleNameInput(this)">
+                    <option value="">-- Select Your Name --</option>
+                    <option value="CUSTOM_NAME">-- Type My Own Name --</option>
+                </select>
+            </div>
+            <div class="form-group hidden" id="custom-name-group">
+                <label for="student-name-text">Enter Your Full Name *</label>
+                <input type="text" id="student-name-text" placeholder="First Last">
+            </div>
+            <div class="form-group">
+                <label for="cohort-code">Cohort Code *</label>
+                <select id="cohort-code" required>
+                    <option value="">-- Select Cohort --</option>
+                    <option value="DWP018">DWP018</option>
+                    <option value="DWP019">DWP019</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="attempt-date">Quiz Attempt Date *</label>
+                <input type="date" id="attempt-date" required>
+            </div>
+            <div class="form-group">
+                <label for="student-email">Email Address *</label>
+                <input type="email" id="student-email" placeholder="name@domain.com" required>
+            </div>
+            <button type="submit">Start Quiz</button>
+            <button type="button" class="btn-secondary" style="float: right;" onclick="showAdminLogin()">Admin Panel</button>
+        </form>
+    </div>
+
+    <!-- ADMIN LOGIN SCREEN -->
+    <div id="screen-admin-login" class="hidden">
+        <h2>Admin Authentication</h2>
+        <form id="admin-login-form" autocomplete="off">
+            <div class="form-group">
+                <label>Admin Email</label>
+                <input type="email" id="admin-email" autocomplete="off" required>
+            </div>
+            <div class="form-group">
+                <label>Admin Password</label>
+                <input type="password" id="admin-password" autocomplete="new-password" required>
+            </div>
+            <button type="submit">Login as Admin</button>
+            <button type="button" class="btn-secondary" onclick="showLogin()">Back to Student Login</button>
+        </form>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="screen-admin-dashboard" class="hidden">
+        <h2>Admin Control Panel</h2>
+        <div style="margin-bottom: 20px;">
+            <button class="btn-secondary" onclick="showLogin()">Logout / Home</button>
+            <button onclick="exportExcel()" style="float: right;">Export Excel Report</button>
+        </div>
+
+        <!-- MANAGE COHORTS SECTION -->
+        <div class="question-card">
+            <h3>Manage Cohorts</h3>
+            <div style="display: flex; gap: 10px; max-width: 400px;">
+                <input type="text" id="new-cohort-input" placeholder="e.g. DWP020">
+                <button type="button" onclick="addCohortCode()">Add Cohort</button>
+            </div>
+        </div>
+        
+        <div class="form-group" style="display: flex; gap: 15px; align-items: center;">
+            <label><input type="checkbox" id="select-all-cb" onclick="toggleSelectAll(this)"> Select All</label>
+            <div>
+                <label>Filter Cohort: 
+                    <select id="filter-cohort" onchange="renderAdminTable()">
+                        <option value="ALL">All Cohorts</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+
+        <div class="admin-table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Select</th>
+                        <th>Name</th>
+                        <th>Cohort</th>
+                        <th>Date</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- QUIZ INTERFACE -->
+    <div id="screen-quiz" class="hidden">
+        <div class="page-numbers" id="page-numbers-container"></div>
+
+        <div class="nav-controls">
+            <button class="btn-secondary" onclick="navBack()">Back</button>
+            <button class="btn-secondary" onclick="confirmHome()">Home</button>
+            <button class="btn-secondary" onclick="reviseAnswer()">Revise Answer</button>
+            <button onclick="submitAnswer()">Submit Answer</button>
+            <button style="background-color: var(--success);" onclick="generateFinalReport()">Generate Final Report</button>
+        </div>
+
+        <div class="instruction-box">
+            <strong>Instructions:</strong> Master standard customer support communication by eliminating direct Indian-English literal translations. Read the question carefully, select, type, or arrange the best standard English expression, and review the real-time feedback.
+        </div>
+
+        <div id="question-container" class="question-card"></div>
+    </div>
+
+    <!-- QUIZ SUMMARY / REPORT SCREEN -->
+    <div id="screen-summary" class="hidden">
+        <h2>Quiz Summary & Feedback</h2>
+        <div id="score-display" style="font-size: 20px; font-weight: bold; margin-bottom: 20px; color: var(--primary);"></div>
+        
+        <h3>Detailed Responses</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50%;">Your Answer & Detailed Error Analysis</th>
+                    <th style="width: 50%;">Correct Answer (Standard English)</th>
+                </tr>
+            </thead>
+            <tbody id="summary-tbody"></tbody>
+        </table>
+
+        <h3>Actionable Feedback for Fluency Improvement</h3>
+        <div id="feedback-points" class="instruction-box" style="background: #f8f9fa; border-left-color: var(--primary);"></div>
+
+        <button onclick="showLogin()" style="margin-top: 15px;">Return to Home Screen</button>
+    </div>
+
+</div>
+<script src="./script.js"></script>
+</body>
+</html>
